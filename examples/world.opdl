@@ -1,0 +1,49 @@
+; vim:filetype=lisp
+
+(type robot
+  :nouns ("robot"))
+
+(type house
+  :base (building)
+  :nouns ("house" "home"))
+
+(type building
+  :base (inanimate)
+  :nouns ("building"))
+
+(type window
+  :base (inanimate)
+  :nouns ("window"))
+
+(type inanimate
+  :nouns ("thing"))
+
+(type speaker
+  :pronouns ("i" "me"))
+
+(type listener
+  :pronouns ("you"))
+
+(type male
+  :nouns ("male")
+  :pronouns ("he" "him" "himself"))
+
+(type man
+  :base (male)
+  :nouns ("man"))
+
+(type boy
+  :base (male)
+  :nouns ("boy"))
+
+(type female
+  :nouns ("female")
+  :pronouns ("she" "her" "herself"))
+
+(type woman
+  :base (female)
+  :nouns ("woman"))
+
+(type girl
+  :base (female)
+  :nouns ("girl"))

@@ -1,0 +1,10 @@
+; vim:filetype=lisp
+
+(object robot
+  :type (robot listener))
+
+(object speaker
+  :type (speaker))
+
+(object thehouse
+  :type (house blue))

@@ -47,3 +47,41 @@
 (type girl
   :base (female)
   :nouns ("girl"))
+
+(type blue
+  :provides-adjectives ("blue"))
+
+(type green
+  :provides-adjectives ("green"))
+
+(type yellow
+  :provides-adjectives ("yellow"))
+
+(type red
+  :provides-adjectives ("red"))
+
+(type orange
+  :provides-adjectives ("orange"))
+
+(type brown
+  :provides-adjectives ("brown"))
+
+(type purple
+  :provides-adjectives ("purple"))
+
+(type grey
+  :provides-adjectives ("grey"))
+
+(type black
+  :base (dark)
+  :provides-adjectives ("black"))
+
+(type white
+  :base (light)
+  :provides-adjectives ("white"))
+
+(type dark
+  :provides-adjectives ("dark"))
+
+(type light
+  :provides-adjectives ("light"))

@@ -1,4 +1,5 @@
 ; vim:filetype=lisp
+(import "world.opdl")
 
 (object robot
   :type (robot listener))

@@ -1,0 +1,5 @@
+I:=NP[1.0]:I
+am:=(VP\NP)/NP[1.0]:λy.λx.is(x,y)
+am:=(VP/NP)/NP[1.0]:λx.λy.is-question(x,y)
+cool:=NP[1.0]:cool
+

@@ -4,49 +4,66 @@
   :nouns ("robot"))
 
 (type house
-  :base (building)
+  :bases (building)
   :nouns ("house" "home"))
 
 (type building
-  :base (inanimate)
+  :bases (inanimate)
   :nouns ("building"))
 
 (type window
-  :base (inanimate)
+  :bases (inanimate)
   :nouns ("window"))
 
 (type inanimate
+  :antibases (animate)
   :nouns ("thing"))
 
+(type animate
+  :antibases (inanimate))
+
+(type human
+  :bases (animate)
+  :nouns ("human"))
+
 (type speaker
+  :bases (human)
   :pronouns ("i" "me"))
 
 (type listener
   :pronouns ("you"))
 
 (type male
+  :bases (human)
+  :antibases (female)
   :nouns ("male")
   :pronouns ("he" "him" "himself"))
 
 (type man
-  :base (male)
+  :bases (male)
   :nouns ("man"))
 
 (type boy
-  :base (male)
+  :bases (male)
   :nouns ("boy"))
 
 (type female
+  :bases (human)
+  :antibases (male)
   :nouns ("female")
   :pronouns ("she" "her" "herself"))
 
 (type woman
-  :base (female)
+  :bases (female)
   :nouns ("woman"))
 
 (type girl
-  :base (female)
+  :bases (female)
   :nouns ("girl"))
+
+(type human-group
+  :collection-of (human)
+  :pronouns ("they" "them" "themselves"))
 
 (type blue
   :provides-adjectives ("blue"))
@@ -73,11 +90,11 @@
   :provides-adjectives ("grey"))
 
 (type black
-  :base (dark)
+  :bases (dark)
   :provides-adjectives ("black"))
 
 (type white
-  :base (light)
+  :bases (light)
   :provides-adjectives ("white"))
 
 (type dark

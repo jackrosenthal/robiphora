@@ -166,7 +166,8 @@ class ProbabilityRelation(dict):
 
 
 tokens_p = re.compile(r'''
-    \s*(?:  (?P<control>
+    \s*(?:  (?:\#[^\n]*(?:\n|$))
+       |    (?P<control>
                 (?P<Comma>,)
             |   (?P<Lambda>λ)
             |   (?P<Dot>\.)
@@ -180,7 +181,7 @@ tokens_p = re.compile(r'''
             |   (?P<Whack>\\)
             |   (?P<Slash>/)
             )
-       |    (?P<name>[^0-9/\\\s().\[\]:=,Λ]+)
+       |    (?P<name>[^0-9/\\\s().\[\]:=,Λ#]+)
        |    (?P<number>[01](\.[0-9]*)?)
        )\s*''', re.VERBOSE)
 

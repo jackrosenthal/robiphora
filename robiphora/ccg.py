@@ -138,7 +138,9 @@ class Definition:
             probrepr = ' [{}]'.format(
                 ', '.join(chain(
                     ('{} {}'.format(k, v) for k, v in self.probdict.items()),
-                    (self.defaultprob, ) if self.defaultprob != 1.0 else ())))
+                    (str(self.defaultprob), )
+                        if self.defaultprob != 1.0
+                        else ())))
         else:
             probrepr = ''
         return '{!r} := {!r}{} : {!r}'.format(
@@ -149,15 +151,18 @@ class Definition:
 
 
 class PartialPredicate(list):
-    pass
+    def __repr__(self):
+        return 'PartialPredicate({})'.format(super().__repr__())
 
 
 class DefaultProbability(float):
-    pass
+    def __repr__(self):
+        return 'DefaultProbability({})'.format(super().__repr__())
 
 
 class ProbabilityRelation(dict):
-    pass
+    def __repr__(self):
+        return 'ProbabilityRelation({})'.format(super().__repr__())
 
 
 tokens_p = re.compile(r'''
@@ -217,6 +222,11 @@ def parse(tokens, debug=False):
             # Shift
             stack.append(lookahead)
             lookahead = next(tokens)
+        elif match(stack, [T['LBrack']]):
+            typectx = False
+            # Shift
+            stack.append(lookahead)
+            lookahead = next(tokens)
         elif match(stack, [Name]) and typectx:
             n = stack.pop()
             stack.append(Type(n))
@@ -230,7 +240,7 @@ def parse(tokens, debug=False):
             stack.append(TypeMissingLeft(lhs, rhs))
         elif match(stack, (Type, T['Slash'], Type)):
             # Reduce by TypeMissingRight -> Type / Type
-            r, _, lhs = (stack.pop() for _ in range(3))
+            rhs, _, lhs = (stack.pop() for _ in range(3))
             stack.append(TypeMissingRight(lhs, rhs))
         elif match(stack, [Name, float, T['RBrack']]):
             stack.pop()
@@ -260,7 +270,8 @@ def parse(tokens, debug=False):
             # Reduce by Abstraction -> λ Name . Production
             p, _, x, _ = (stack.pop() for _ in range(4))
             stack.append(Abstraction(x, p))
-        elif match(stack, (Production, T['And'], Production)):
+        elif (match(stack, (Production, T['And'], Production))
+              and not isinstance(lookahead, ControlToken)):
             # Reduce by And -> Production Λ Production
             rhs, _, lhs = (stack.pop() for _ in range(3))
             stack.append(And(lhs, rhs))

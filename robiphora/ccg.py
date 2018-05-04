@@ -25,6 +25,11 @@ class Name(str, Production):
     def __repr__(self):
         return self
 
+    def apply(self, pred, name):
+        if name == self:
+            return pred
+        return self
+
 
 class Type:
     def __init__(self, name):
@@ -71,9 +76,12 @@ class Abstraction(Production):
         self.prod = prod
 
     def apply(self, pred, name=None):
+        if name == self.var:
+            return self
         if not name:
             name = self.var
-        return self.prod.apply(pred, name=name)
+            return self.prod.apply(pred, name=name)
+        return Abstraction(self.var, self.prod.apply(pred, name))
 
     def __repr__(self):
         return 'λ{}.{!r}'.format(self.var, self.prod)

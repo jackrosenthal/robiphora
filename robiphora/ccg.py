@@ -88,7 +88,7 @@ class Predicate(Production):
         return '{}({})'.format(self.name, ', '.join(map(repr, self.args)))
 
     def apply(self, pred, name):
-        if not args:
+        if not self.args:
             return self
         return Predicate(self.name, *(x.apply(pred, name) for x in self.args))
 
@@ -191,9 +191,6 @@ def lex(code):
         raise SyntaxError("malformed input")
 
 
-
-
-
 def parse(tokens, debug=False):
     tokens = iter(tokens)
     stack = []
@@ -221,12 +218,12 @@ def parse(tokens, debug=False):
             stack.append(t)
         elif match(stack, (Type, T['Whack'], Type)):
             # Reduce by TypeMissingLeft -> Type \ Type
-            r, _, l = (stack.pop() for _ in range(3))
-            stack.append(TypeMissingLeft(l, r))
+            rhs, _, lhs = (stack.pop() for _ in range(3))
+            stack.append(TypeMissingLeft(lhs, rhs))
         elif match(stack, (Type, T['Slash'], Type)):
             # Reduce by TypeMissingRight -> Type / Type
-            r, _, l = (stack.pop() for _ in range(3))
-            stack.append(TypeMissingRight(l, r))
+            r, _, lhs = (stack.pop() for _ in range(3))
+            stack.append(TypeMissingRight(lhs, rhs))
         elif match(stack, [Name, float, T['RBrack']]):
             stack.pop()
             p, n = (stack.pop() for _ in range(2))
@@ -241,15 +238,15 @@ def parse(tokens, debug=False):
             stack.append(r)
             stack.append(default)
         elif match(stack,
-                [Name,
-                 float,
-                 T['Comma'],
-                 ProbabilityRelation,
-                 DefaultProbability]):
+                   [Name,
+                    float,
+                    T['Comma'],
+                    ProbabilityRelation,
+                    DefaultProbability]):
             default, r, _, p, n = (stack.pop() for _ in range(5))
             r[n] = p
             stack.append(r)
-            stack.append(deafult)
+            stack.append(default)
         elif (match(stack, (T['Lambda'], Name, T['Dot'], Production))
               and not isinstance(lookahead, ControlToken)):
             # Reduce by Abstraction -> λ Name . Production
@@ -278,23 +275,23 @@ def parse(tokens, debug=False):
             pp, _, name = (stack.pop() for _ in range(3))
             stack.append(Predicate(name, *reversed(pp)))
         elif match(stack,
-                [Name,
-                 T['Define'],
-                 Type,
-                 T['LBrack'],
-                 ProbabilityRelation,
-                 DefaultProbability,
-                 T['Colon'],
-                 Production]) and not isinstance(lookahead, ControlToken):
+                   [Name,
+                    T['Define'],
+                    Type,
+                    T['LBrack'],
+                    ProbabilityRelation,
+                    DefaultProbability,
+                    T['Colon'],
+                    Production]) and not isinstance(lookahead, ControlToken):
             production, _, default, r, _, typ, _, word = (
                 stack.pop() for _ in range(8))
             yield Definition(word, typ, production, r, default)
         elif match(stack,
-                [Name,
-                 T['Define'],
-                 Type,
-                 T['Colon'],
-                 Production]) and not isinstance(lookahead, ControlToken):
+                   [Name,
+                    T['Define'],
+                    Type,
+                    T['Colon'],
+                    Production]) and not isinstance(lookahead, ControlToken):
             production, _, typ, _, word = (
                 stack.pop() for _ in range(5))
             yield Definition(word, typ, production)
@@ -309,4 +306,3 @@ def parse(tokens, debug=False):
                 lookahead = None
     if stack:
         raise SyntaxError("incomplete parse")
-

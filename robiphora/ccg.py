@@ -1,6 +1,7 @@
 import re
 from itertools import chain
 from robiphora.opdl import match
+from collections import defaultdict
 
 
 class ControlToken:
@@ -346,13 +347,30 @@ def parse(tokens, debug=False):
 #       False otherwise
 def combine(type1, type2):
     if isinstance(type1, TypeMissingRight):
-        print('{} is missing {}'.format(type1, type1.missing))
         if(type1.missing == type2):
-            print('{} =1= {}'.format(type1.missing, type2))
             return type1.name
     if isinstance(type2, TypeMissingLeft):
-        print('{} is missing {}'.format(type2, type2.missing))
         if(type2.missing == type1):
-            print('{} =2= {}'.format(type2.missing, type1))
             return type2.name
     return False
+
+def find_word_in_lexicon(word, lexicon):
+    return [d for d in lexicon if d.word == word]
+
+def chartparse(words, lexicon):
+    chart = defaultdict(list)
+
+    for index, word in enumerate(words):
+        for d in find_word_in_lexicon(word, lexicon):
+            chart[(index,1)].append(d.typ)
+
+    for j in range(2, len(words)+1):
+        for i in range(0, len(words)-j+1):
+            for k in range(1,j):
+
+                for l in chart[(i,k)]:
+                    for r in chart[(i+k, j-k)]:
+                        c = combine(l,r)
+                        if c:
+                            chart[(i,j)].append(c)
+    print(dict(chart))

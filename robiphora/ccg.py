@@ -40,6 +40,13 @@ class Type:
     def __repr__(self):
         return self.name
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.name == other.name
+        return False
+ 
+    def __ne__(self, other):
+        return (self == other) == False
 
 class TypeMissing(Type):
     def __init__(self, lhs, missing):
@@ -57,6 +64,13 @@ class TypeMissing(Type):
             f = '{!r}{}{!r}'
         return f.format(self.name, self.op, self.missing)
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return (self.name == other.name) and (self.missing == other.missing) 
+        return False
+ 
+    def __ne__(self, other):
+        return (self == other) == False
 
 class TypeMissingLeft(TypeMissing):
     op = '\\'
@@ -326,3 +340,19 @@ def parse(tokens, debug=False):
                 lookahead = None
     if stack:
         raise SyntaxError("incomplete parse")
+
+#Try to combine type1 and type2 (type2immedeatly to the right of type1)
+#Return Type is able to be combined
+#       False otherwise
+def combine(type1, type2):
+    if isinstance(type1, TypeMissingRight):
+        print('{} is missing {}'.format(type1, type1.missing))
+        if(type1.missing == type2):
+            print('{} =1= {}'.format(type1.missing, type2))
+            return type1.name
+    if isinstance(type2, TypeMissingLeft):
+        print('{} is missing {}'.format(type2, type2.missing))
+        if(type2.missing == type1):
+            print('{} =2= {}'.format(type2.missing, type1))
+            return type2.name
+    return False

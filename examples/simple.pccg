@@ -1,5 +1,5 @@
 I:=PRO[1.0]:I()
-am:=(VP\PRO)/NP[1.0]:λy.λx.is(x,y)
-am:=(VP/NP)/PRO[1.0]:λx.λy.is-question(x,y)
+am:=(S\PRO)/NP[1.0]:λy.λx.is(x,y)
+am:=(S/NP)/PRO[1.0]:λx.λy.is-question(x,y)
 cool:=NP[1.0]:cool()
 

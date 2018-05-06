@@ -49,6 +49,7 @@ class Type:
     def __ne__(self, other):
         return (self == other) == False
 
+
 class TypeMissing(Type):
     def __init__(self, lhs, missing):
         if not isinstance(lhs, Type):
@@ -72,6 +73,7 @@ class TypeMissing(Type):
  
     def __ne__(self, other):
         return (self == other) == False
+
 
 class TypeMissingLeft(TypeMissing):
     op = '\\'
@@ -163,6 +165,9 @@ class Definition:
                 self.typ,
                 probrepr,
                 self.production)
+
+    def probability(self, contex):
+        return 1.0
 
 
 class PartialPredicate(list):
@@ -345,24 +350,24 @@ def parse(tokens, debug=False):
 #Try to combine type1 and type2 (type2immedeatly to the right of type1)
 #Return Type is able to be combined
 #       False otherwise
-def combine(type1, type2):
-    if isinstance(type1, TypeMissingRight):
-        if(type1.missing == type2):
-            return type1.name
-    if isinstance(type2, TypeMissingLeft):
-        if(type2.missing == type1):
-            return type2.name
+def combine(left, right):
+    if isinstance(left[0], TypeMissingRight):
+        if(left[0].missing == right[0]):
+            return (left[0].name, left[1].apply(right[1]), left[2] * right[2])
+    if isinstance(right[0], TypeMissingLeft):
+        if(right[0].missing == left[0]):
+            return (right[0].name, right[1].apply(left[1]), left[2] * right[2])
     return False
 
 def find_word_in_lexicon(word, lexicon):
     return [d for d in lexicon if d.word == word]
 
-def chartparse(words, lexicon):
+def chartparse(words, lexicon, context):
     chart = defaultdict(list)
 
     for index, word in enumerate(words):
         for d in find_word_in_lexicon(word, lexicon):
-            chart[(index,1)].append(d.typ)
+            chart[(index,1)].append((d.typ, d.production, d.probability(context)))
 
     for j in range(2, len(words)+1):
         for i in range(0, len(words)-j+1):
@@ -373,4 +378,11 @@ def chartparse(words, lexicon):
                         c = combine(l,r)
                         if c:
                             chart[(i,j)].append(c)
-    print(dict(chart))
+    if chart[(0,len(words))]:
+        parses = []
+        for p in chart[(0,len(words))]:
+            if p[0] == Type("S"):
+                parses.append(p) 
+        print("{} => {}".format(" ".join(words), parses))
+    else:
+        print("No parses generated for: {}".format(" ".join(words)))

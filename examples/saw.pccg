@@ -1,0 +1,20 @@
+# I saw the wood
+# I fed her cat food
+I:=NP[1.0]:I()
+saw:=(S\NP)/NP[workshop 0.9, 0.5]:λy.λx.cut(x,y)
+saw:=(S\NP)/NP[outside 0.9, 0.5]:λy.λx.see(x,y)
+wood:=N:wood()
+the:=N:wood()
+the:=NP/N:λx.x
+the:=NP/NP:λx.x
+
+fed:=(S\NP)/NP[kitchen 0.9, 0.5]:λy.λx.feed(x,y)
+fed:=((S\NP)/NP)/NP[kitchen 0.9, 0.5]:λz.λy.λx.feed(x,y,z)
+
+her:=NP:her()
+her:=NP/N:λx.owns(her(),x)
+her:=NP/NP:λx.owns(her(),x)
+
+cat:=N:cat()
+cat:=NP/NP:λx.cat(x)
+food:=NP:food()

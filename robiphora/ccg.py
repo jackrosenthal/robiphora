@@ -45,9 +45,6 @@ class Type:
         if isinstance(other, self.__class__):
             return self.name == other.name
         return False
- 
-    def __ne__(self, other):
-        return (self == other) == False
 
 
 class TypeMissing(Type):
@@ -68,11 +65,8 @@ class TypeMissing(Type):
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
-            return (self.name == other.name) and (self.missing == other.missing) 
+            return self.name == other.name and self.missing == other.missing
         return False
- 
-    def __ne__(self, other):
-        return (self == other) == False
 
 
 class TypeMissingLeft(TypeMissing):
@@ -156,8 +150,8 @@ class Definition:
                 ', '.join(chain(
                     ('{} {}'.format(k, v) for k, v in self.probdict.items()),
                     (str(self.defaultprob), )
-                        if self.defaultprob != 1.0
-                        else ())))
+                    if self.defaultprob != 1.0
+                    else ())))
         else:
             probrepr = ''
         return '{!r} := {!r}{} : {!r}'.format(
@@ -347,8 +341,9 @@ def parse(tokens, debug=False):
     if stack:
         raise SyntaxError("incomplete parse")
 
-#Try to combine type1 and type2 (type2immedeatly to the right of type1)
-#Return Type is able to be combined
+
+# Try to combine type1 and type2 (type2immedeatly to the right of type1)
+# Return Type is able to be combined
 #       False otherwise
 def combine(left, right):
     if isinstance(left[0], TypeMissingRight):
@@ -359,30 +354,33 @@ def combine(left, right):
             return (right[0].name, right[1].apply(left[1]), left[2] * right[2])
     return False
 
+
 def find_word_in_lexicon(word, lexicon):
     return [d for d in lexicon if d.word == word]
+
 
 def chartparse(words, lexicon, context, verbose=False):
     chart = defaultdict(list)
 
     for index, word in enumerate(words):
         for d in find_word_in_lexicon(word, lexicon):
-            chart[(index,1)].append((d.typ, d.production, d.probability(context)))
+            chart[(index, 1)].append(
+                (d.typ, d.production, d.probability(context)))
 
     for j in range(2, len(words)+1):
         for i in range(0, len(words)-j+1):
-            for k in range(1,j):
+            for k in range(1, j):
 
-                for l in chart[(i,k)]:
+                for l in chart[(i, k)]:
                     for r in chart[(i+k, j-k)]:
-                        c = combine(l,r)
+                        c = combine(l, r)
                         if c:
-                            chart[(i,j)].append(c)
-    if chart[(0,len(words))]:
+                            chart[(i, j)].append(c)
+    if chart[(0, len(words))]:
         parses = []
-        for p in chart[(0,len(words))]:
+        for p in chart[(0, len(words))]:
             if p[0] == Type("S"):
-                parses.append(p) 
+                parses.append(p)
         if verbose:
             print("{} => {}".format(" ".join(words), parses))
         return parses
@@ -390,6 +388,3 @@ def chartparse(words, lexicon, context, verbose=False):
         if verbose:
             print("No parses generated for: {}".format(" ".join(words)))
         return False
-
-
-

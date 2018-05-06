@@ -33,8 +33,8 @@ setup(
     long_description=long_description,
     url='https://github.com/jackrosenthal/robiphora',
 
-    author='Jack Rosenthal',
-    author_email='jack@rosenth.al',
+    author='Jack Rosenthal, Paul Sattizahn',
+    author_email='jack@rosenth.al, psattiza@mines.edu',
 
     license='MIT',
 
@@ -81,6 +81,7 @@ setup(
     entry_points={
         'console_scripts': [
             'robiphora=robiphora.__main__:main',
+            'ccg=robiphora.ccg:main',
         ],
     },
-)
+    )

@@ -389,8 +389,7 @@ def chartparse(words, lexicon, context, verbose=False):
             print("No parses generated for: {}".format(" ".join(words)))
         return False
 
-
-if __name__ == "__main__":
+def main():
     import argparse
     import sys
 
@@ -419,3 +418,7 @@ if __name__ == "__main__":
         infile = sys.stdin
     for line in infile:
         print(chartparse(line.split(), ds, opdlContext, args.v))
+
+
+if __name__ == "__main__":
+    main()

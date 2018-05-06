@@ -362,7 +362,7 @@ def combine(left, right):
 def find_word_in_lexicon(word, lexicon):
     return [d for d in lexicon if d.word == word]
 
-def chartparse(words, lexicon, context):
+def chartparse(words, lexicon, context, verbose=False):
     chart = defaultdict(list)
 
     for index, word in enumerate(words):
@@ -383,6 +383,13 @@ def chartparse(words, lexicon, context):
         for p in chart[(0,len(words))]:
             if p[0] == Type("S"):
                 parses.append(p) 
-        print("{} => {}".format(" ".join(words), parses))
+        if verbose:
+            print("{} => {}".format(" ".join(words), parses))
+        return parses
     else:
-        print("No parses generated for: {}".format(" ".join(words)))
+        if verbose:
+            print("No parses generated for: {}".format(" ".join(words)))
+        return False
+
+
+

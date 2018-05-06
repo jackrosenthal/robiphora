@@ -160,7 +160,7 @@ class Definition:
                 probrepr,
                 self.production)
 
-    def probability(self, contex):
+    def probability(self, context):
         return 1.0
 
 
@@ -388,3 +388,34 @@ def chartparse(words, lexicon, context, verbose=False):
         if verbose:
             print("No parses generated for: {}".format(" ".join(words)))
         return False
+
+
+if __name__ == "__main__":
+    import argparse
+    import sys
+
+    description = 'A PCCG parser that is context aware!'
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument('--pccg', metavar='g', type=str,
+                        default="../examples/saw.pccg",
+                        help='filepath to grammer definition')
+    parser.add_argument('--context', metavar='c', type=str,
+                        default="../examples/saw.opdl",
+                        help='filepath to opdl context')
+    parser.add_argument('--infile', metavar='i', type=str,
+                        help='filepath to input file, default read from STDIN')
+    parser.add_argument('-v', action='store_true',
+                        help='print more parsing infomation')
+    args = parser.parse_args()
+    pccg = open(args.pccg)
+    ds = [d for d in parse(lex(pccg.read()))]
+
+    # TODO create opdl context
+    context = open(args.context)
+    opdlContext = context
+    if args.infile is not None:
+        infile = open(args.infile)
+    else:
+        infile = sys.stdin
+    for line in infile:
+        print(chartparse(line.split(), ds, opdlContext, args.v))

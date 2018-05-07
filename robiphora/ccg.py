@@ -389,6 +389,7 @@ def chartparse(words, lexicon, context, verbose=False):
             print("No parses generated for: {}".format(" ".join(words)))
         return False
 
+
 def main():
     import argparse
     import sys
@@ -411,13 +412,12 @@ def main():
 
     # TODO create opdl context
     context = open(args.context)
-    opdlContext = context
     if args.infile is not None:
         infile = open(args.infile)
     else:
         infile = sys.stdin
     for line in infile:
-        print(chartparse(line.split(), ds, opdlContext, args.v))
+        print(chartparse(line.split(), ds, context, args.v))
 
 
 if __name__ == "__main__":

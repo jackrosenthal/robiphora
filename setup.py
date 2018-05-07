@@ -54,7 +54,7 @@ setup(
     ],
 
     # What does your project relate to?
-    keywords='anaphora exaphora linguistics robotics',
+    keywords='anaphora exaphora linguistics robotics ccg parsing',
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
@@ -66,14 +66,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=[
-        'spacy>=2.0',
-    ],
-
-    dependency_links=[
-        'https://github.com/explosion/spacy-models/releases/download/'
-        'en_core_web_md-2.0.0/en_core_web_md-2.0.0.tar.gz',
-    ],
+    install_requires=[],
 
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow

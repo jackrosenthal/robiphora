@@ -218,3 +218,30 @@ class KnowledgeBase:
                 self.types[se.args[1]] = Type.from_se(se)
             else:
                 raise SyntaxError("Unknown OPDL data: {!r}".format(se.args[0]))
+
+    def query_is(self, a, b, alpha=0.0, visited=None):
+        """
+        Query the probability that an object of type ``a`` is of type ``b``
+        as well.
+        """
+        if a == b:
+            return 1.0
+        if b in self.types[a].antibases:
+            return 0.0
+        if visited is None:
+            visited = {a}
+        else:
+            visited.add(a)
+        for base in self.types[a].bases - visited:
+            p = 0.9 * self.query_is(base, b, alpha, visited)
+            if p > alpha:
+                alpha = p
+        if alpha < 0.1:
+            # we may be able to improve by looking at relations to
+            # types we don't have an explicit edge to...
+            others = set(self.types.keys()) - self.types[a].bases - visited
+            for base in others:
+                p = 0.1 * self.query_is(base, b, alpha, visited)
+                if p > alpha:
+                    alpha = p
+        return alpha

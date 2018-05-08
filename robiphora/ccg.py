@@ -166,6 +166,8 @@ class Definition:
         with respect to the :class:`KnowledgeBase` ``kb`` of this definiton's
         production being the correct production.
         """
+        if context is None:
+            return 1.0
         alpha = self.defaultprob
         for otherctx, mult in self.probdict.items():
             p = mult * kb.query_is(context, otherctx, alpha)
@@ -369,7 +371,7 @@ def find_word_in_lexicon(word, lexicon):
     return [d for d in lexicon if d.word == word]
 
 
-def chartparse(words, lexicon, kb, context, verbose=False):
+def chartparse(words, lexicon, kb, context=None, verbose=False):
     chart = defaultdict(list)
 
     for index, word in enumerate(words):

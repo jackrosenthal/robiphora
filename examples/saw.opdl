@@ -1,0 +1,11 @@
+; vim:filetype=lisp
+(import "world.opdl")
+
+(object robot
+  :type (robot listener))
+
+(object speaker
+  :type (speaker))
+
+(object outside
+  :type (house blue))

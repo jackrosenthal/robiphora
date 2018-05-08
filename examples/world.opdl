@@ -1,5 +1,8 @@
 ; vim:filetype=lisp
 
+(type outside
+  :nouns ("outside"))
+
 (type robot
   :nouns ("robot"))
 

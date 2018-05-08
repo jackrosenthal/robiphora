@@ -8,13 +8,13 @@ the:=N:wood()
 the:=NP/N:λx.x
 the:=NP/NP:λx.x
 
-fed:=(S\NP)/NP[kitchen 0.9, 0.5]:λy.λx.feed(x,y)
-fed:=((S\NP)/NP)/NP[kitchen 0.9, 0.5]:λz.λy.λx.feed(x,y,z)
+fed:=(S\NP)/NP[house 0.4, 0.5]:λy.λx.feed(x,y)
+fed:=((S\NP)/NP)/NP[house 0.6, 0.5]:λz.λy.λx.feed(x,y,z)
 
 her:=NP:her()
 her:=NP/N:λx.owns(her(),x)
 her:=NP/NP:λx.owns(her(),x)
 
-cat:=N:cat()
+cat:=N[house 0.7]:cat()
 cat:=NP/NP:λx.cat(x)
 food:=NP:food()

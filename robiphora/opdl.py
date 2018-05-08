@@ -224,7 +224,7 @@ class KnowledgeBase:
         Query the probability that an object of type ``a`` is of type ``b``
         as well.
         """
-        if a == b:
+        if a == b or alpha == 1.0:
             return 1.0
         if b in self.types[a].antibases:
             return 0.0

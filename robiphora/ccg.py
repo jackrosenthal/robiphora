@@ -1,6 +1,6 @@
 import re
 from itertools import chain
-from robiphora.opdl import match
+from robiphora.opdl import match, KnowledgeBase
 from collections import defaultdict
 
 
@@ -125,7 +125,7 @@ class And(Production):
 
 
 class Definition:
-    def __init__(self, word, typ, production, probdict=None, defaultprob=1.0):
+    def __init__(self, word, typ, production, probdict=None, defaultprob=0.05):
         if probdict is None:
             probdict = {}
         if not isinstance(defaultprob, float):
@@ -145,12 +145,12 @@ class Definition:
         self.defaultprob = defaultprob
 
     def __repr__(self):
-        if self.probdict or self.defaultprob != 1.0:
+        if self.probdict or self.defaultprob != 0.05:
             probrepr = ' [{}]'.format(
                 ', '.join(chain(
                     ('{} {}'.format(k, v) for k, v in self.probdict.items()),
                     (str(self.defaultprob), )
-                    if self.defaultprob != 1.0
+                    if self.defaultprob != 0.05
                     else ())))
         else:
             probrepr = ''
@@ -160,8 +160,18 @@ class Definition:
                 probrepr,
                 self.production)
 
-    def probability(self, context):
-        return 1.0
+    def probability(self, context, kb):
+        """
+        Compute the probablity of the current context (``context``, a string)
+        with respect to the :class:`KnowledgeBase` ``kb`` of this definiton's
+        production being the correct production.
+        """
+        alpha = self.defaultprob
+        for otherctx, mult in self.probdict.items():
+            p = mult * kb.query_is(context, otherctx, alpha)
+            if p > alpha:
+                alpha = p
+        return alpha
 
 
 class PartialPredicate(list):
@@ -260,7 +270,7 @@ def parse(tokens, debug=False):
         elif match(stack, [Name, float, T['RBrack']]):
             stack.pop()
             p, n = (stack.pop() for _ in range(2))
-            default = DefaultProbability(1.0)
+            default = DefaultProbability(0.05)
             r = ProbabilityRelation({n: p})
             stack.append(r)
             stack.append(default)
@@ -359,13 +369,13 @@ def find_word_in_lexicon(word, lexicon):
     return [d for d in lexicon if d.word == word]
 
 
-def chartparse(words, lexicon, context, verbose=False):
+def chartparse(words, lexicon, kb, context, verbose=False):
     chart = defaultdict(list)
 
     for index, word in enumerate(words):
         for d in find_word_in_lexicon(word, lexicon):
             chart[(index, 1)].append(
-                (d.typ, d.production, d.probability(context)))
+                (d.typ, d.production, d.probability(context, kb)))
 
     for j in range(2, len(words)+1):
         for i in range(0, len(words)-j+1):
@@ -396,28 +406,23 @@ def main():
 
     description = 'A PCCG parser that is context aware!'
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('--pccg', metavar='g', type=str,
-                        default="../examples/saw.pccg",
-                        help='filepath to grammer definition')
+    parser.add_argument('--pccg', metavar='g', type=argparse.FileType('r'),
+                        help='path to PCCG grammar definition')
+    parser.add_argument('--opdl', metavar='k', type=argparse.FileType('r'),
+                        help='path to OPDL knowledgebase')
     parser.add_argument('--context', metavar='c', type=str,
-                        default="../examples/saw.opdl",
-                        help='filepath to opdl context')
+                        help='current context (should be an OPDL type)')
     parser.add_argument('--infile', metavar='i', type=str,
-                        help='filepath to input file, default read from STDIN')
+                        default=sys.stdin,
+                        help='path to input file, default read from STDIN')
     parser.add_argument('-v', action='store_true',
                         help='print more parsing infomation')
     args = parser.parse_args()
-    pccg = open(args.pccg)
-    ds = [d for d in parse(lex(pccg.read()))]
+    ds = [d for d in parse(lex(args.pccg.read()))]
+    kb = KnowledgeBase(args.opdl)
 
-    # TODO create opdl context
-    context = open(args.context)
-    if args.infile is not None:
-        infile = open(args.infile)
-    else:
-        infile = sys.stdin
-    for line in infile:
-        print(chartparse(line.split(), ds, context, args.v))
+    for line in args.infile:
+        print(chartparse(line.split(), ds, kb, args.context, args.v))
 
 
 if __name__ == "__main__":

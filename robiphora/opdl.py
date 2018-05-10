@@ -8,6 +8,7 @@ This module contains utilities for using OPDL in Python.
 """
 import re
 import os
+from collections import defaultdict
 
 
 class CompleteExpression:
@@ -180,6 +181,12 @@ class OPDLData:
                 '{}={!r}'.format(k, getattr(self, k))
                 for k, _ in self.__class__.namepairs))
 
+    def baserefs(self):
+        for attrname, _ in self.__class__.namepairs:
+            a = getattr(self, attrname)
+            if a:
+                yield attrname, a
+
 
 class Type(OPDLData):
     namepairs = (("bases", "bases"),
@@ -197,6 +204,7 @@ class KnowledgeBase:
     def __init__(self, init_load=None):
         self.objects = {}
         self.types = {}
+        self.baserefs = defaultdict(lambda: defaultdict(set))
         if init_load:
             self.load(init_load)
 
@@ -215,7 +223,11 @@ class KnowledgeBase:
             elif se.args[0] == 'object':
                 self.objects[se.args[1]] = Object.from_se(se)
             elif se.args[0] == 'type':
-                self.types[se.args[1]] = Type.from_se(se)
+                t = Type.from_se(se)
+                for aname, aset in t.baserefs():
+                    for ref in aset:
+                        self.baserefs[aname][ref].add(se.args[1])
+                self.types[se.args[1]] = t
             else:
                 raise SyntaxError("Unknown OPDL data: {!r}".format(se.args[0]))
 

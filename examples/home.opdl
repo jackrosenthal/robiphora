@@ -28,3 +28,17 @@
 
 (object thehouse
   :type (house blue))
+
+(type ball
+  :bases (inanimate)
+  :nouns ("ball" "sphere"))
+
+(object theball
+  :type (ball red))
+
+(object blueball
+  :type (ball blue))
+
+(object orangeball
+  :type (ball orange))
+

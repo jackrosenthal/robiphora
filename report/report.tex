@@ -1,0 +1,493 @@
+\documentclass[12pt]{article}
+
+\usepackage{fontspec}
+\setmainfont{TeX Gyre Termes}
+\setsansfont{TeX Gyre Heros}
+\setmonofont{TeX Gyre Cursor}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{csquotes}
+
+\usepackage[letterpaper]{geometry}
+\usepackage{lastpage}
+\usepackage{graphicx, wrapfig, subcaption, setspace, booktabs}
+\usepackage[font=small, labelfont=bf]{caption}
+
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\usepackage[english]{babel}
+\usepackage[style=trad-plain,backend=biber]{biblatex}
+\addbibresource{report.bib}
+
+\usepackage{sectsty}
+\usepackage{hyperref}
+\usepackage{listings}
+\lstset{language=Lisp,columns=flexible}
+
+\usepackage{latexsym}
+\usepackage{xspace}
+\usepackage{epsfig}
+\setlength {\topmargin} {0 mm}
+\setlength {\headsep} {0 mm}
+\setlength {\headheight} {0 in}
+\setlength {\voffset} {0 mm}
+\setlength {\oddsidemargin} {0 mm}
+\setlength {\evensidemargin} {0 mm}
+\setlength {\hoffset} {0 mm}
+\setlength {\textwidth} {6.5 in}
+\setlength {\textheight} {9 in}
+\sectionfont{\scshape}
+
+\newcommand{\HRule}[1]{\rule{\linewidth}{#1}}
+\setcounter{tocdepth}{5}
+\setcounter{secnumdepth}{5}
+
+\title{Robiphora: Probabilistic Anaphora and Exophora Resolution for Robots}
+
+\author{%
+Jack Rosenthal \\
+Colorado School of Mines \\
+Computer Science Department \\
+\texttt{jrosenth@mines.edu}}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+\textbf{Anaphora} is a reference from one phrase to another in a linguistical
+context. \textbf{Exophora} is a reference from a phrase in a sentence to
+something outside of the text, for example, objects in the real world. Both of
+these linguistical concepts are important for robots that speak with humans to
+understand and be able to interpret.
+
+Often times, the referent of a given anaphor can be determined based on
+knowledge about properties of the referent and the anaphor, and how they
+relate. For example, consider the following sentence:
+\begin{center}
+    $\underbrace{\text{The house}}_{\text{referent}}$ was cold because
+    $\underbrace{\text{the window}}_{\text{anaphor}}$ was open.
+\end{center}
+In this sentence, \emph{the window} probably refers to \emph{the house} (it is
+said to be the window \emph{of the house}) since houses often have windows. In
+fact, we may almost think of this in a sort of inherital pattern: \emph{the
+house} is an instance of \emph{a house}, \emph{houses} are a certain form of
+\emph{buildings}, \emph{buildings} often have \emph{windows}, and \emph{the
+window} is an instance of \emph{a window}.
+
+As another example, consider this sentence:
+\begin{center}
+    $\underbrace{\text{John}}_{\text{referent}}$ was disappointed since Sally
+    did not show up to the movie with
+    $\underbrace{\text{him}}_{\text{anaphor}}$.
+\end{center}
+In this sentence, \emph{him} could refer to a number of different noun phrases:
+\emph{the movie}, \emph{Sally}, or \emph{John}. To deduce that \emph{him}
+actually refers to \emph{John}, we would have to know that \emph{John} is an
+instance of a \emph{man}, all \emph{men} are \emph{males}, and that
+\emph{males} can be referred to by the pronoun \emph{him}. Once again, this
+inherital structure came up as a common pattern in our resolution.
+
+The goal of the Robiphora system is to provide reference resolution for not
+only the linguistical context of a sentence, using anaphora, but also
+considering objects contained in context of the world, which is particularly
+important to using linguistics in the robotics domain.
+
+The remainder of this paper is organized as follows: section~\ref{sec:related}
+discusses related work in this area, and why Robiphora presents a novel
+extension to existing works. Section~\ref{sec:details} discusses the
+implementation details of Robiphora, including a formal definition of the
+Object Property Definition Language, a declarative programming language
+created for the Robiphora system, such so that the language could be
+reimplemented upon any computer programming language or software framework.
+Section~\ref{sec:conclusion} draws conclusions from this work and discusses
+future work that could be done in this area.
+
+\section{Motivation and Related Work}
+\label{sec:related}
+
+Anaphora reference resolution is a well studied problem in computational
+linguistics. \cite{hobbs78} proposes a resolution system for pronouns based on
+parse trees, and \cite{lappin94} adds salience measures to the syntactic
+parse tree to obtain better accuracy in resolving pronoun references. Many
+people have studied parsing more cases of anaphora than just pronouns, for
+example, in \cite{alkofahi99}.
+
+Beyond just anaphora resolution, exophora is a well studied field as well:
+\cite{pineda00} proposes a theory for multimodal reference resoulution, and
+works like \cite{prasov08} even incorporate eye-gaze to assist in resolving
+objects placed in a 3-dimensional space.
+
+Finally, \cite{pineda97} proposes a logic-based reference resolution system
+which could be implemented using logic programming. Further, \cite{chai04}
+proposes a graph-matching algorithm for probabilistic reference resolution.
+Robiphora is an attempt to combine these two ideas: by using ideas similar to
+logic programming that shows clear relationships between objects and their
+types with a probabilistic reference scoring system, references can be resolved
+using a technique which has not been done before.
+
+\section{Details of the Robiphora System}
+\label{sec:details}
+
+\subsection{Description of Solution}
+
+Robiphora is composed of a few major components:
+\begin{itemize}
+    \item The Object Property Description Language, the fundamental component
+        of critical to Robiphora which provides mechanisms to declare
+        properties about types of objects and how they relate to each other.
+        Further, the language allows for declarations of what objects exist in
+        the world, providing context for the listener.
+    \item A probabilistic knowledge base, which provides high level interfaces
+        to query the probabilistic measures that one type shares relations with
+        another.
+    \item A resolution component, which takes sentence semantical information
+        and feeds it into the probabilistic knowledge base to discover
+        references.
+\end{itemize}
+
+\subsubsection{The Object Property Description Language}
+
+The \textbf{Object Property Description Language} (OPDL) is a domain-specific
+declarative programming language created for use in the Robiphora system. OPDL
+allows for the definition of \textbf{objects} in a given domain which have a
+certain set of types. \textbf{Types} define an inherital structure of relation
+between objects, and the nouns, pronouns, and adjectives that could be used to
+refer to objects of their type. OPDL allows for multiple inheritance of types:
+objects can have multiple types, and their types can have multiple base types.
+
+OPDL uses s-expressions as it's basic form of syntax. \textbf{S-expressions}
+are surrounded in parenthesis (\texttt{(} and \texttt{)}) and can contain any
+number of s-expressions, symbols, or literals (the set of all of these types
+refers to \textbf{expressions}), as well as any number of keyword arguments.
+\textbf{Symbols} are any continuous group of characters not including
+parenthesis, whitespace, colons (\texttt{:}), double quotes (\texttt{"}),
+single quotes (\texttt{'}), or semicolons (\texttt{;}).  \textbf{Literals} can
+be either string literals or numeric literals. String literals are any group of
+characters surrounded by double quotes, not terminated by the special control
+sequence \texttt{\textbackslash"}. Numeric literals start with an optional
+negative sign, and are followed by one or more digits, an optional decimal
+point, and zero or more digits after the decimal point. Keyword arguments
+define associative properties of s-expression, and are written starting with a
+colon, then followed by a symbol (which defines the name of the argument), and
+then followed by an expression denoting the value of the argument. Each
+s-expression may have ordered arguments, as well as keyword arguments.
+\textbf{Comments} start with a semicolon not inside of a string literal.
+Comments and whitespace are ignored and have no semantical meaning to the
+language.
+
+At the outermost level of expression nesting, s-expressions are used to
+provide definitions for objects and types, and import data from other OPDL
+files. The ordering of these expressions provides no meaning to an OPDL
+implementation: the meaning of the language is the same regardless of the
+order. The collection of these expressions is referred to as an \textbf{OPDL
+probabilistic knowledge base}.
+
+Object definitions begin with the symbol \texttt{object} followed by the object
+name, and have an optional keyword argument of \texttt{type}, which should have
+an s-expression listing the types the object may be. An example object
+definition is shown in Figure~\ref{opdl:object}.
+
+\begin{figure}[ht]
+    \begin{lstlisting}
+    (object thehouse
+      :type (house blue))
+    \end{lstlisting}
+    \caption{A simple object definition. This object is named \texttt{thehouse}
+    and is of types \texttt{house} and \texttt{blue}.}
+    \label{opdl:object}
+\end{figure}
+
+Type definitions begin with the symbol \texttt{type} followed by the type name,
+and have the following optional keyword arguments:
+\begin{enumerate}
+    \item \texttt{bases}, an s-expression which defines the set of base types
+        that the type will inherit from.
+    \item \texttt{antibases}, an s-expression which defines which base types
+        should cause low probability of showing inheritance.
+    \item \texttt{collection-of}, an s-expression that defines that the type
+        refers to multiple of a certain type (for example, the \texttt{people}
+        type might be a collection of \texttt{human}).
+    \item \texttt{nouns}, an s-expression of string literals that contains all
+        of the nouns which can be used to refer to objects of that type. This
+        should only be used to specify strict nouns: pronouns and other
+        components of noun phrases (such as adjectives) are specified
+        separately.
+    \item \texttt{pronouns}, an s-expression of string literals that contains
+        the pronouns that can be used to reference objects of this type (for
+        example, the \texttt{male} type might have pronouns ``he'', ``him'',
+        and ``himself'').
+    \item \texttt{provides-adjectives}, an s-expression of string literals that
+        specifies what adjectives might increase the probability of reference
+        to this object.
+\end{enumerate}
+
+An relatively simple example set of related type declarations is shown in
+Figure~\ref{opdl:types}.
+
+\begin{figure}[htb]
+    \begin{lstlisting}
+    (type human
+      :nouns ("human"))
+
+    (type speaker
+      :bases (human)
+      :pronouns ("i" "me"))
+
+    (type listener
+      :pronouns ("you"))
+
+    (type male
+      :bases (human)
+      :antibases (female)
+      :nouns ("male")
+      :pronouns ("he" "him" "himself"))
+
+    (type man
+      :bases (male)
+      :nouns ("man"))
+
+    (type boy
+      :bases (male young)
+      :nouns ("boy"))
+
+    (type female
+      :bases (human)
+      :antibases (male)
+      :nouns ("female")
+      :pronouns ("she" "her" "herself"))
+    ;; a similar set of types (girl, woman, etc) could be defined as well
+
+    (type people
+      :collection-of (human)
+      :pronouns ("they" "them" "themselves"))
+    \end{lstlisting}
+    \caption{Types as defined in OPDL. There are quite a few types here: this
+    is to demonstrate the various features of OPDL in a realistic manner.}
+    \label{opdl:types}
+\end{figure}
+
+The only other OPDL declarative is \texttt{import}. The \texttt{import}
+expression loads more definitions from another file, relative to the current
+file's path. This allows a broad set of types to be created to define how the
+world works, and many narrower sets of types and objects to be created for
+specific scenarios and contexts.
+
+The reader may be wondering at this point: \emph{why create OPDL when the same
+logic can be encoded using a logic programming language like Prolog?} While the
+same \emph{logic} can be encoded using Prolog, OPDL defines probabilistic
+relations between objects. By using OPDL, references can be evaluated in a
+well-defined and non-stochastic manner (similar to Prolog), but solve the
+references using probabilities. Details of the probabilistic reference
+resolution are discussed in the next section.
+
+\subsubsection{Probability Evaluation}
+
+In order to derive probabilities from an OPDL probabilistic knowledge base,
+inherital probabilities must be assigned to the act of inheritance. Further,
+probabilities must be assigned to the act of antibasing (strictly not
+inheriting from) and non-basing (when it not stated whether inheritance exists
+or not). The symbols $P(I)$,  $P(A)$, and $P(\lnot I)$ are used to refer to
+these constants, respectively. For the Robiphora implementation, the following
+constants were selected:
+\begin{align*}
+    P(I) &= 0.9 \\
+    P(A) &= 0.0 \\
+    P(\lnot I) &= 0.1
+\end{align*}
+
+Depending on the structure of the OPDL definitions, a different set of
+constants may want to be selected. For example, when a set of types is selected
+that uses many levels of inheritance to convey a simple meaning, it may be
+desired to raise $P(I)$ or lower $P(\lnot I)$ so that the inheritance still
+conveys its meaning. For $P(I) = 1.0$ and $P(A) = P(\lnot I) = 0.0$, OPDL
+becomes a logical programming language.
+
+Once we have these probabilities established, we may design an algorithm to
+determine the probability that one type could have the properties of another.
+It should be unsurprising to the reader that the algorithm is similar to the
+DPLL Boolean variable satisfaction algorithm\cite{dpll}. The algorithm used in
+Robiphora recursively determines the maximum probability of one type being
+another, multiplied by the probability defined in the $P(I)$, $P(A)$, or
+$P(\lnot I)$ constants. The base case is that the two types are equivalent, in
+which case, the probability is $1.0$. This algorithm is shown in
+Algorithm~\ref{alg:queryis}.
+
+\begin{algorithm}
+    \caption{Query the probability that an object of type $a$ could be referred
+    to by the properties of type $b$ within an OPDL knowledgebase}
+    \label{alg:queryis}
+
+    \begin{algorithmic}
+        \Procedure{TypeProbability}{$K, a, b, v$}
+            \Comment{$K$ is the knowledge base, $v$ is the set of visited nodes}
+            \If{$a$ is $b$}
+                \State \Return 1.0
+            \EndIf
+            \If{$K$ states $a$ is in $b$'s antibases}
+                \State \Return $P(A)$
+            \EndIf
+            \State{Add $A$ to $v$}
+            \State \Return{
+                $\begin{aligned}
+                    \max(&\{P(I) \times \hbox{\Call{TypeProbability}{$K, c, b, v$}}\ |\ c \in K_a - v\} \\
+                    \cup\  &\{P(\lnot I) \times \hbox{\Call{TypeProbability}{$K, c, b, v$}}\ |\ c \in K_a^c - v\})
+                \end{aligned}$}
+        \EndProcedure
+    \end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Pruning}
+
+Algorithm~\ref{alg:queryis} can receive significant performance improvements by
+passing an extra parameter $\alpha$ that indicates the best probability we know
+we can achieve so far. This is shown in Algorithm~\ref{alg:pruned}
+
+\begin{algorithm}
+    \caption{Query the probability that an object of type $a$ could be referred
+    to by the properties of type $b$ within an OPDL knowledgebase, taking into
+    account pruning parameters}
+    \label{alg:pruned}
+
+    \begin{algorithmic}
+        \Procedure{TypeProbabilityPruned}{$K, a, b, v, \alpha$}
+            \If{$a$ is $b$}
+                \State \Return 1.0
+            \EndIf
+            \If{$K$ states $a$ is in $b$'s antibases}
+                \State \Return $P(A)$
+            \EndIf
+            \State{Add $A$ to $v$}
+            \ForAll{$c$ in $K_a$}
+                \State{$p \gets P(I) \times \hbox{\Call{TypeProbabilityPruned}{$K, c, b, v, \alpha$}}$}
+                \If{$p > \alpha$}
+                    \State{$\alpha \gets p$}
+                \EndIf
+            \EndFor
+            \If{$\alpha < P(\lnot I)$}
+                \ForAll{$c$ in $K_a^c$}
+                    \State{$p \gets P(\lnot I) \times \hbox{\Call{TypeProbabilityPruned}{$K, c, b, v, \alpha$}}$}
+                    \If{$p > \alpha$}
+                        \State{$\alpha \gets p$}
+                    \EndIf
+                \EndFor
+            \EndIf
+            \State\Return{$\alpha$}
+        \EndProcedure
+    \end{algorithmic}
+\end{algorithm}
+
+Algorithm~\ref{alg:pruned} is guaranteed to always produce the same results as
+Algorithm~\ref{alg:queryis} so as long as $\alpha$ is initially selected to be
+less than $\min(P(A), P(\lnot I))$ and $P(I) > P(\lnot I)$\footnote{This is a
+perfectly sane assumption: systems defined to have a stronger probability of
+non-inherited edges over inherited edges simply do not make sense.}, but does
+so in greater or equivalent efficiently. Similar to DPLL \cite{dpllheuristic},
+if the selection of the ordering of iteration through $K_a$ and $K_a^c$ is
+selected using a good heuristic, the author would conjecture that performance
+would be improved further\footnote{This is, however, left to others wishing to
+do future work in this research area.}.
+
+\subsubsection{Resolution}
+
+Once the type-querying algorithm (Algorithm~\ref{alg:queryis} and
+Algorithm~\ref{alg:pruned}) is defined, resolving anaphors in sentences
+becomes relatively trivial: for each potential referent (or a nearby subset of
+referents) to each anaphor, determine the probability that the type(s) of the
+anaphor and its modifiers (such as adjectives) are referring to the referent's
+type. Note that the set of referents could be determined from the situated
+context of the listener or robot using OPDL, or from the sentence context (or
+both).
+
+% TODO: Pseudocode?
+
+Robiphora makes use of Sattizahn's probabilistic combinatory categorical
+grammar parser\cite{sattizahn} to create semantical parses of the sentences,
+and then considers the set of all possible referents when preforming the
+resolution.
+
+\subsection{Evaluation}
+
+Robiphora uses a non-stochastic algorithm for reference resolution, and hence,
+the results will only be as good as the OPDL input is. While automatic
+generation of an OPDL-like structure from a corpus text to be used with this
+algorithm would be an intriguing research topic, it is most certainly not the
+focus of Robiphora as of now. Further, the author is not aware of any other
+reference resolution systems which use an OPDL-like structure. Hence,
+evaluation of accuracy resolving real natural language compared to established
+techniques needs to be done at a meta-level. See section~\ref{sec:related} for
+an this overview of existing techniques and how they compare to the Robiphora
+system.
+
+However, evaluation of the time-scale complexity of Robiphora is an important
+consideration. The remainder of this section will focus on deriving performance
+measures for the algorithms presented in this paper.
+
+Algorithm~\ref{alg:queryis} has a time complexity of $\Theta(2^n)$, where $n$
+is the number of types in the system, when $a \ne b$ and $b$ is not an antibase
+of $a$ (under these cases, it is trivial to show the time complexity is
+constant). This is because, for each type, we must consider whether that type
+is included or not as a measure in our probability.
+
+When pruning is implemented, like in Algorithm~\ref{alg:pruned}, the worst case
+time complexity has not changed (it is still $O(2^n)$), but the best case time
+complexity becomes $o(n)$ as we may not have to consider both states of each
+type in our analysis. Given a good ordering heuristic (as stipulated earlier in
+the paper), the author speculates this could happen on a wide variety of
+practical inputs. Compared to the truth-table like algorithm presented in
+\cite{chai04}, which has a lower bound of $o(2^n)$, Algorithm~\ref{alg:pruned}
+now has a much more time-efficient lower bound.
+
+\subsection{Discussion}
+
+While Robiphora has OPDL as it's biggest advantage: a mechanism to specify how
+the world is typed in a well-defined and non-stochastic manner, this is also
+Robiphora's biggest disadvantage. Modelling the behavior of the world is a hard
+problem, and when you have to do so in a well-defined manner, it's remarkably
+harder.
+
+Perhaps some of this could be evaded by developing a technique to automatically
+generate OPDL-like semantics from a corpus text or capture of a real-world
+scenario. Such a problem is most certainly not trivial though, so the author
+leaves this to be tackled by a future researcher.
+
+Other possibilities for future work in this area include designing ordering
+heuristics for Algorithm~\ref{alg:pruned}, or extending OPDL to allow
+specification of explicit probability edges.
+
+\section{Conclusion}
+
+Robiphora introduces a new and novel technique for multi-modal reference
+resolution based on a probabilistic model. Along with this, Robiphora
+introduces a few new concepts to the broader computer science domain as well:
+the Object Property Definition Language, a domain-specific declarative
+programming language, the probabilistic object-type resolution algorithm (see
+Algorithm~\ref{alg:queryis}) and the associated pruning techniques (see
+Algorithm~\ref{alg:pruned}). The author hopes that future researchers are able
+to integrate the techniques presented in this paper in their own work.
+
+\label{sec:conclusion}
+
+\subsection{Acknowledgments}
+
+The author would like to make a special acknowledgment to Paul Sattizahn for
+his work on his semantical parser using a probabilistic combinatory categorical
+grammar. He was willing to integrate his parser into the Robiphora framework
+before it was even working, and even willing to integrate an early version of
+OPDL into his probability evaluation function.
+
+In addition, the author would like to acknowledge Tom Williams for his
+excellent teaching which led to the development of Robiphora. Without his
+Linguistic Human Robot Interaction course, Robiphora would not even be a
+concept in the author's mind.
+
+%%%%%%%%%%%%%%%%%%
+\clearpage
+\printbibliography
+%%%%%%%%%%%%%%%%%%
+
+\end{document}

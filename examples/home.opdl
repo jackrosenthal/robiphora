@@ -4,8 +4,27 @@
 (object robot
   :type (robot listener))
 
+(type tall
+  :antibases (short)
+  :provides-adjectives ("tall"))
+
+(type short
+  :antibases (tall)
+  :provides-adjectives ("short"))
+
+(type jack
+  :bases (man tall)
+  :nouns ("jack"))
+
+(type jill
+  :bases (woman short)
+  :nouns ("jill"))
+
 (object speaker
-  :type (speaker))
+  :type (speaker jack))
+
+(object jill
+  :type (jill))
 
 (object thehouse
   :type (house blue))

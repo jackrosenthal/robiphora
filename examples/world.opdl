@@ -27,7 +27,7 @@
 
 (type human
   :bases (animate)
-  :nouns ("human"))
+  :nouns ("human" "person"))
 
 (type speaker
   :bases (human)
@@ -66,6 +66,7 @@
 
 (type human-group
   :collection-of (human)
+  :nouns ("people")
   :pronouns ("they" "them" "themselves"))
 
 (type blue
